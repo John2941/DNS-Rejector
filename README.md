@@ -29,7 +29,9 @@ sudo apt-mark hold python-nfqueue
 # Future Plans
 
 Block/redirect all domains from specified hosts.
+
 Block all domains except for whitelisted domains.
+
 Block specified domains on all hosts.
 
 
