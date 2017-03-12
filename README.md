@@ -26,6 +26,13 @@ sudo dpkg -i python-nfqueue_0.4-3_amd64.deb
 sudo apt-mark hold python-nfqueue
 ```
 
+# Persistence
+
+Add a root cronjob entry to check for existance and if not, execute.
+```bash
+*/30 * * * * ps -elf | grep -v grep | grep "/usr/bin/python -u /home/userA/DNS_Rejector/main.py" >> /dev/null ||  /usr/bin/python -u /home/userA/DNS_Rejector/main.py --domain google.com yahoo.com --hosts 192.168.1.1 192.168.1.2 > /var/log/DNS_Redirection.log 2>&1 &
+```
+
 # Future Plans
 
 Block/redirect all domains from specified hosts.
