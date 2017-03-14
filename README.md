@@ -40,7 +40,7 @@ Add a root cronjob entry to check for existance and if not, execute.
 
 # Future Plans
 
-~~Block/redirect all domains from specified hosts.~
+~~Block/redirect all domains from specified hosts.~~
 
 Block all domains except for whitelisted domains.
 
