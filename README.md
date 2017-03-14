@@ -5,19 +5,31 @@ This script sits on a DNS server within a local network and blocks specified dom
 
 # Usage
 
-You want to block google.com, yahoo.com, and reddit.com from hosts 192.168.1.1 and 192.168.1.2
+You want to block google.com, yahoo.com, and reddit.com from hosts 192.168.1.1 and 192.168.1.2. 
+
+Note: do not include wildcards in the domains you want blacklisted. Just include the basic domain name. (E.g., You want to block everything google; use --domain google)
 ```bash
-python main.py --domain google.com yahoo.com reddit.com --hosts 192.168.1.1 192.168.1.2
+python main.py --domains google.com yahoo.com reddit.com --hosts 192.168.1.1 192.168.1.2
 ```
 
 If you wanted to redirect a specific host visiting google.com to a specific redirector (192.168.1.100)
 ```bash
-python main.py --domain google.com --hosts 192.168.1.1 --spoof 192.168.1.100
+python main.py --domains google.com --hosts 192.168.1.1 --spoof 192.168.1.100
 ```
 
 Block all domains for a specific host
 ```bash
-python main.py --domain '*' --hosts 192.168.1.1
+python main.py --domains '*' --hosts 192.168.1.1
+```
+
+Block specific domains for all hosts
+```bash
+python main.py --domains google.com --hosts '*'
+```
+
+Block all domains for all hosts expect for google.com
+```bash
+python main.py --domains '*' --hosts '*' --whitelist google.com
 ```
 
 # Dependencies
@@ -42,9 +54,9 @@ Add a root cronjob entry to check for existance and if not, execute.
 
 ~~Block/redirect all domains from specified hosts.~~
 
-Block all domains except for whitelisted domains.
+~~Block all domains except for whitelisted domains.~~
 
-Block specified domains on all hosts.
+~~Block specified or all domains on all hosts.~~
 
 
 
