@@ -5,6 +5,8 @@
 # Created: 2017-02-22
 # Author: Johnathan
 #
+# Note: Possible issue when blacklisting all domains and trying to resolve the host's fqdn
+#
 # Distributed under terms of the MIT license.
 # Requires python-nfqueue 0.4-3
 
