@@ -32,6 +32,11 @@ Block all domains for all hosts expect for google.com
 python main.py --domains '*' --hosts '*' --whitelist google.com
 ```
 
+Block different domains for different hosts
+```bash
+python main.py --combined_blacklist 192.168.1.1,192.168.1.2:youtube --combined_blacklist 192.168.1.3:yahoo
+```
+
 # Dependencies
 
 This requires the 0.4-3 version of python-nfqueue. sudo apt install python-nfqueue will return version >.5 so use these commands to download and put an upgrade hold on the 0.4-3 version of python-nfqueue
