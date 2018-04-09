@@ -12,12 +12,14 @@
 
 import time
 import argparse
-import nfqueue
 import os
 import subprocess as sp
-from socket import getfqdn
-from collections import defaultdict
 import logging
+import sys
+from socket import getfqdn, socket
+from collections import defaultdict
+from netfilterqueue import NetfilterQueue
+
 try:
     from scapy.all import *
 except ImportError:
@@ -94,7 +96,7 @@ class DomainList(defaultdict):
 # The IPTable's chain your prepending to depends on where your DNS service is hosted on the machine.
 #       If your DNS service is hosted on the machine, you'll be prepending to the INPUT chain.
 #       However, if your DNS packets are being FORWARD to another service
-#       (i.e., a docker container that uses a bridge network adapter) then you'll need to prepend to the FORWARD chain.
+#       (i.e., a docker container that uses a bridge network adapter) then you'll need to prepend to the FORWARD chain
 
 def clean_iptables(table_name):
     iptables_bin = '/sbin/iptables'
@@ -112,10 +114,14 @@ def create_iptables(table_name, ips):
     sp.Popen([iptables_bin, '-N', table_name], stdout=DEVNULL, stderr=DEVNULL)
     sp.Popen([iptables_bin, '-I', 'FORWARD', '-j', table_name], stdout=DEVNULL, stderr=DEVNULL)
     if '*' in ips:
-        sp.Popen([iptables_bin, '-A', table_name, '-p', 'udp', '--dport', '53', '-j', 'NFQUEUE'],
+        rule = [iptables_bin, '-A', table_name, '-p', 'udp', '--dport', '53', '-j', 'NFQUEUE', '--queue-num', '1']
+        log.debug("IPTABLE RULE: {}".format(' '.join(rule)))
+        sp.Popen(rule,
                  stdout=DEVNULL, stderr=DEVNULL)
     else:
-        sp.Popen([iptables_bin, '-A', table_name, '-s', ','.join(ips), '-p', 'udp', '--dport', '53', '-j', 'NFQUEUE'],
+        rule = [iptables_bin, '-A', table_name, '-s', ','.join(ips), '-p', 'udp', '--dport', '53', '-j', 'NFQUEUE', '--queue-num', '1']
+        log.debug("IPTABLE RULE: {}".format(' '.join(rule)))
+        sp.Popen([iptables_bin, '-A', table_name, '-s', ','.join(ips), '-p', 'udp', '--dport', '53', '-j', 'NFQUEUE', '--queue-num', '1'],
                  stdout=DEVNULL, stderr=DEVNULL)
 
 def build_domain_list(**kwargs):
@@ -150,11 +156,10 @@ def build_domain_list(**kwargs):
 def callback(payload):
     global blacklist
     global whitelist
-    data = payload.get_data()
-    pkt = IP(data)
+    pkt = IP(payload.get_payload())
     # print "{} {:<40} -> {}".format(time.strftime("%Y-%m-%d %H:%M"), pkt[DNS].qd.qname[:38], getfqdn(pkt[IP].src))
     if not pkt.haslayer(DNSQR):
-        payload.set_verdict(nfqueue.NF_ACCEPT)
+        payload.accept()
     else:
         log.debug("{} searching for {}".format(pkt[IP].src, pkt[DNS].qd.qname))
         log.debug('{} in blacklist: {}'.format(pkt[DNS].qd.qname, (pkt[IP].src, pkt[DNS].qd.qname) in blacklist))
@@ -171,7 +176,8 @@ def callback(payload):
                           UDP(dport=pkt[UDP].sport, sport=pkt[UDP].dport) / \
                           DNS(id=pkt[DNS].id, qr=1, aa=1, qd=pkt[DNS].qd, \
                               an=DNSRR(rrname=pkt[DNS].qd.qname, ttl=10, rdata=args.redirect_ip))
-            payload.set_verdict(nfqueue.NF_DROP)
+            #payload.set_verdict(nfqueue.NF_DROP)
+            payload.drop()
             send(spoofed_pkt, verbose=0)
             print "{} *SPOOFED* {:<30} -> {}".format(time.strftime("%Y-%m-%d %H:%M"), pkt[DNS].qd.qname[:28],
                                                      getfqdn(pkt[IP].src))
@@ -212,20 +218,18 @@ def main():
     log.debug('Creating IPTable rules for {}'.format(','.join(set(blacklist.keys()))))
     create_iptables(iptables_table, set(blacklist.keys()))
 
-    q = nfqueue.queue()
-    q.open()
-    q.bind(socket.AF_INET)
-    q.set_callback(callback)
-    q.create_queue(0)
+    q = NetfilterQueue()
+    q.bind(1, callback)
+    s = socket.fromfd(q.get_fd(), socket.AF_UNIX, socket.SOCK_STREAM)
     try:
-        q.try_run()  # Main loop
+        #q.try_run()  # Main loop
+        q.run_socket(s)
     except KeyboardInterrupt:
-        q.unbind(socket.AF_INET)
-        q.close()
+        s.close()
+        q.unbind()
         clean_iptables(iptables_table)
         sys.exit('Closing...')
 
 
 if __name__ == '__main__':
     main()
-
