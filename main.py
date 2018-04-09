@@ -94,7 +94,7 @@ class DomainList(defaultdict):
 # The IPTable's chain your prepending to depends on where your DNS service is hosted on the machine.
 #       If your DNS service is hosted on the machine, you'll be prepending to the INPUT chain.
 #       However, if your DNS packets are being FORWARD to another service
-#       (i.e., a docker container that uses a bridge network adapter) then you'll need to prepend to the FORWARD chain
+#       (i.e., a docker container that uses a bridge network adapter) then you'll need to prepend to the FORWARD chain.
 
 def clean_iptables(table_name):
     iptables_bin = '/sbin/iptables'
